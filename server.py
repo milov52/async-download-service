@@ -55,25 +55,25 @@ async def archive(request, timeout, directory):
                                                        stdout=asyncio.subprocess.PIPE, cwd=directory)
         await response.prepare(request)
 
+        chunk = True
         while chunk:
             chunk = await process.stdout.read(NUMBER_BYTES)
             logging.info('Sending archive chunk..')
-
             await response.write(chunk)
             if timeout:
                 await asyncio.sleep(5)
-
         return response
+
     except asyncio.CancelledError:
-        logging.info('Download was interrupted')
-        await asyncio.create_subprocess_exec('kill', str(process.pid))
+        logging.error('Download was interrupted')
         raise
     except IndexError:
-        logging.info('IndexError')
-        await asyncio.create_subprocess_exec('kill', str(process.pid))
+        logging.error('IndexError')
     except SystemExit:
-        logging.info('SystemExit')
-        await asyncio.create_subprocess_exec('kill', str(process.pid))
+        logging.error('SystemExit')
+    finally:
+        if process.returncode != 0:
+            await asyncio.create_subprocess_exec('kill', str(process.pid))
 
 
 async def handle_index_page(request):
