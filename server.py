@@ -40,10 +40,7 @@ async def archive(request, timeout, directory):
     response = web.StreamResponse()
     response.headers['Content-Disposition'] = 'attachment; filename="archive.zip"'
 
-    try:
-        archive_hash = request.match_info['archive_hash']
-    except KeyError:
-        logging.error('Отсутствует ключ archive_hash')
+    archive_hash = request.match_info['archive_hash']
 
     if not os.path.exists(os.path.join(directory, archive_hash)):
         raise web.HTTPNotFound(text='Архив не существует или был удален')
