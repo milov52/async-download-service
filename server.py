@@ -40,7 +40,10 @@ async def archive(request, timeout, directory):
     response = web.StreamResponse()
     response.headers['Content-Disposition'] = 'attachment; filename="archive.zip"'
 
-    archive_hash = request.match_info.get('archive_hash')
+    try:
+        archive_hash = request.match_info['archive_hash']
+    except KeyError:
+        logging.error('Отсутствует ключ archive_hash')
 
     if not os.path.exists(os.path.join(directory, archive_hash)):
         raise web.HTTPNotFound(text='Архив не существует или был удален')
@@ -52,11 +55,10 @@ async def archive(request, timeout, directory):
                                                        stdout=asyncio.subprocess.PIPE, cwd=directory)
         await response.prepare(request)
 
-        while True:
+        while chunk:
             chunk = await process.stdout.read(NUMBER_BYTES)
             logging.info('Sending archive chunk..')
-            if not chunk:
-                break
+
             await response.write(chunk)
             if timeout:
                 await asyncio.sleep(5)
