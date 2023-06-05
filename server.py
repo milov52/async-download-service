@@ -67,6 +67,7 @@ async def archive(request, timeout, directory):
     except asyncio.CancelledError:
         logging.info('Download was interrupted')
         await asyncio.create_subprocess_exec('kill', str(process.pid))
+        raise
     except IndexError:
         logging.info('IndexError')
         await asyncio.create_subprocess_exec('kill', str(process.pid))
